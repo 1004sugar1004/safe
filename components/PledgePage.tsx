@@ -1,44 +1,37 @@
 import React, { useState } from 'react';
 
+const schools = [
+    '증평중',
+    '증평여중',
+    '형석중',
+    '증평초',
+    '삼보초',
+    '죽리초',
+    '도안초'
+];
+
 const PledgePage: React.FC = () => {
     const [name, setName] = useState('');
-    const [school, setSchool] = useState('');
+    const [school, setSchool] = useState(schools[0]); // 기본값을 첫 번째 학교로 설정
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!name.trim() || !school.trim()) {
-            alert('이름과 학교를 모두 입력해주세요.');
+        if (!name.trim()) {
+            alert('이름을 입력해주세요.');
             return;
         }
 
         setIsSubmitting(true);
         setStatus('idle');
         
-        // --- Google Apps Script 연동 ---
-        // 1. 구글 스프레드시트를 생성하고 '확장 프로그램' > 'Apps Script'로 이동합니다.
-        // 2. 안내받은 스크립트 코드를 붙여넣고 저장합니다.
-        // 3. '배포' > '새 배포'를 클릭합니다.
-        // 4. 유형을 '웹 앱'으로 설정하고, '액세스 권한이 있는 사용자'를 '모든 사용자'로 변경한 후 배포합니다.
-        // 5. 배포 후 나타나는 웹 앱 URL을 복사하여 아래 상수에 붙여넣습니다.
-
-        // ❗️❗️ 중요: 아래 URL을 본인의 Google Apps Script 웹 앱 URL로 교체해주세요! ❗️❗️
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzuyhCAfNCt79Hf033-SrzVXFnza2khjnXEAqvcc_5HrR9bpOoAJL5TI6qvybXqPQHB/exec'; // <-- 이 URL을 교체하세요.
-
-        if (GOOGLE_SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbzuyhCAfNCt79Hf033-SrzVXFnza2khjnXEAqvcc_5HrR9bpOoAJL5TI6qvybXqPQHB/exec') {
-             console.log("Pledge submitted (simulated):", { name, school, timestamp: new Date().toISOString() });
-             alert("시뮬레이션 모드입니다. 실제 데이터 저장을 위해서는 PledgePage.tsx 파일의 GOOGLE_SCRIPT_URL을 실제 배포 URL로 교체해야 합니다.");
-             setTimeout(() => {
-                setIsSubmitting(false);
-                setStatus('success');
-             }, 1000);
-             return;
-        }
+        // Google Apps Script URL for data submission.
+        const GOOGLE_SCRIPT_URL: string = 'https://script.google.com/macros/s/AKfycbzuyhCAfNCt79Hf033-SrzVXFnza2khjnXEAqvcc_5HrR9bpOoAJL5TI6qvybXqPQHB/exec';
 
         try {
-            // Google Apps Script는 CORS 정책으로 인해 'no-cors' 모드가 필요할 수 있습니다.
-            // 이 모드에서는 직접적인 response body를 읽을 수 없지만, 데이터는 정상적으로 전송됩니다.
+            // Google Apps Script has CORS policy, so mode: 'no-cors' might be needed.
+            // In this mode, we can't read the response body, but data is sent correctly.
             await fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors', 
@@ -56,6 +49,11 @@ const PledgePage: React.FC = () => {
             setIsSubmitting(false);
         }
     };
+    
+    // 드롭다운 스타일링을 위한 클래스
+    const customSelectWrapper = `relative before:content-[''] before:absolute before:right-4 before:top-1/2 before:-translate-y-1/2 before:w-0 before:h-0 before:border-l-4 before:border-r-4 before:border-t-4 before:border-l-transparent before:border-r-transparent before:border-t-slate-500 before:pointer-events-none`;
+    const selectClassName = `shadow appearance-none border border-yellow-300 bg-yellow-50 rounded-lg w-full py-3 px-4 text-gray-900 leading-tight focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500`;
+
 
     return (
         <div className="text-center flex flex-col items-center justify-center h-full animate-fade-in">
@@ -88,19 +86,23 @@ const PledgePage: React.FC = () => {
                                 required
                             />
                         </div>
-                        <div className="mb-6">
+                        <div className={`mb-6 ${customSelectWrapper}`}>
                             <label htmlFor="school" className="block text-slate-700 text-sm font-bold mb-2">
                                 학교
                             </label>
-                            <input
-                                type="text"
+                            <select
                                 id="school"
                                 value={school}
                                 onChange={(e) => setSchool(e.target.value)}
-                                className="shadow appearance-none border border-yellow-300 bg-yellow-50 rounded-lg w-full py-3 px-4 text-gray-900 placeholder-gray-500 leading-tight focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500"
-                                placeholder="증평중학교"
+                                className={selectClassName}
                                 required
-                            />
+                            >
+                                {schools.map((schoolName) => (
+                                    <option key={schoolName} value={schoolName}>
+                                        {schoolName}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
                         <button
                             type="submit"
